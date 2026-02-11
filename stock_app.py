@@ -6,7 +6,7 @@ import requests
 from streamlit_autorefresh import st_autorefresh
 
 # --- הגדרות טלגרם מעודכנות ---
-TELEGRAM_TOKEN = "8247425172:AAHXtpgZN7JDKZAYBFhwLBnlWsPYD_xnlgY"
+
 openai_api_key = st.secrets["OPENAI_API_KEY"]
 TELEGRAM_CHAT_ID = "779151879" # שים לב: וודא שזה ה-ID שקיבלת מ-userinfobot
 def send_telegram_msg(message):
@@ -157,4 +157,5 @@ if st.session_state.alerts:
             
 
             st.markdown('</div>', unsafe_allow_html=True)
+
 
