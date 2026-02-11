@@ -40,7 +40,6 @@ def save_data(data):
 if 'alerts' not in st.session_state:
     st.session_state.alerts = load_data()
 
-# פונקציה לעדכון תיבת הטקסט מההיסטוריה ללא שגיאה
 def set_ticker_callback(symbol):
     st.session_state.ticker_input = symbol
 
@@ -60,12 +59,12 @@ def add_alert_callback():
             st.toast(f"נוסף {t_in}", icon="✅")
         except: st.toast("שגיאה", icon="⚠️")
 
-# עיצוב דחוס ב-40%
+# עיצוב CSS - דגש על כפתורי היסטוריה צמודים ופונט קטן
 st.markdown("""
     <style>
     .stApp { background: #0b0d11; color: #e0e0e0; }
-    h3 { font-size: 0.9rem !important; display: inline; margin-left: 8px; }
-    .price-main { color: #00ffff; font-size: 1rem !important; font-weight: 800; display: inline; margin-right: 10px; }
+    h3 { font-size: 0.85rem !important; display: inline; margin-left: 8px; }
+    .price-main { color: #00ffff; font-size: 0.95rem !important; font-weight: 800; display: inline; margin-right: 10px; }
     
     .stock-card { 
         background: rgba(255, 255, 255, 0.03); 
@@ -78,13 +77,22 @@ st.markdown("""
     .price-badge { background: rgba(0, 255, 255, 0.05); color: #00ffff; padding: 1px 5px; border-radius: 3px; border: 1px solid rgba(0, 255, 255, 0.2); font-size: 0.65rem !important; }
     .hit-badge { background: rgba(188, 19, 254, 0.1); color: #bc13fe; padding: 1px 5px; border-radius: 3px; border: 1px solid #bc13fe; font-size: 0.65rem !important; }
 
-    /* כפתורי היסטוריה - זרימה חופשית בשורה אחת */
-    .history-box { display: flex; flex-wrap: wrap; gap: 5px; margin-bottom: 10px; }
-    .stButton > button { padding: 2px 8px !important; font-size: 0.7rem !important; height: auto !important; }
+    /* עיצוב כפתורי היסטוריה קטנים במיוחד צמודים */
+    div[data-testid="column"] { width: fit-content !important; min-width: unset !important; }
+    .stButton > button { 
+        padding: 2px 6px !important; 
+        font-size: 0.55rem !important; /* קטן ב-25% נוספים */
+        height: auto !important; 
+        min-height: 0px !important;
+        margin: 0px !important;
+    }
+    
+    /* מניעת ריווחים מיותרים בין כפתורי ההיסטוריה */
+    div[data-testid="stHorizontalBlock"] { gap: 4px !important; }
     </style>
     """, unsafe_allow_html=True)
 
-# 1. הזנה למעלה
+# 1. אזור הזנה - למעלה
 c1, c2, c3 = st.columns([2, 2, 1])
 with c1: st.text_input("סימול:", key="ticker_input")
 with c2: st.number_input("יעד ($):", key="price_input", step=0.01, value=None, on_change=add_alert_callback)
@@ -92,19 +100,18 @@ with c3:
     st.write("##")
     if st.button("➕", use_container_width=True): add_alert_callback()
 
-# 2. בחירה מהירה - שורה אחת שמתמלאת ורק אז יורדת
+# 2. בחירה מהירה - מסודר בשורות רציפות
 history = list(st.session_state.alerts.keys())
 if history:
     st.write("🕒 בחירה מהירה:")
-    # יצירת מיכל לכפתורים
-    container = st.container()
-    with container:
-        # פריסת כפתורים בשורה רציפה
-        cols = st.columns(len(history) if len(history) < 10 else 10)
+    # יצירת קונטיינר שמכיל את הכפתורים בצורה צפופה
+    h_area = st.container()
+    with h_area:
+        # פריסה של עד 15 כפתורים בשורה לפני שמתחיל "בלגן"
+        cols = st.columns(15) 
         for i, h_ticker in enumerate(history):
-            col_idx = i % len(cols)
-            with cols[col_idx]:
-                st.button(h_ticker, key=f"h_{h_ticker}", on_click=set_ticker_callback, args=(h_ticker,))
+            col_idx = i % 15
+            cols[col_idx].button(h_ticker, key=f"h_{h_ticker}", on_click=set_ticker_callback, args=(h_ticker,))
 
 st.divider()
 edit_mode = st.sidebar.toggle("🛠️ עריכה")
@@ -117,7 +124,7 @@ if st.session_state.alerts:
             stock_data = yf.Ticker(t).fast_info
             current_p = stock_data['last_price']
             
-            card_html = f'<div class="stock-card"><div style="min-width: 110px;"><b>{t}</b> <span class="price-main">${current_p:.2f}</span></div><div class="alerts-wrapper">'
+            card_html = f'<div class="stock-card"><div style="min-width: 100px;"><b>{t}</b> <span class="price-main">${current_p:.2f}</span></div><div class="alerts-wrapper">'
             
             needs_save = False
             for idx, alert in enumerate(alert_list):
@@ -146,4 +153,5 @@ if st.session_state.alerts:
             st.markdown(card_html, unsafe_allow_html=True)
             if needs_save: save_data(st.session_state.alerts)
         except: pass
+
 
