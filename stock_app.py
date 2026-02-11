@@ -40,6 +40,10 @@ def save_data(data):
 if 'alerts' not in st.session_state:
     st.session_state.alerts = load_data()
 
+# פונקציה לעדכון תיבת הטקסט מההיסטוריה ללא שגיאה
+def set_ticker_callback(symbol):
+    st.session_state.ticker_input = symbol
+
 def add_alert_callback():
     t_in = st.session_state.ticker_input.upper()
     p_in = st.session_state.price_input
@@ -56,7 +60,7 @@ def add_alert_callback():
             st.toast(f"נוסף {t_in}", icon="✅")
         except: st.toast("שגיאה", icon="⚠️")
 
-# עיצוב דחוס ב-40% וסידור שורות
+# עיצוב דחוס ב-40%
 st.markdown("""
     <style>
     .stApp { background: #0b0d11; color: #e0e0e0; }
@@ -74,8 +78,8 @@ st.markdown("""
     .price-badge { background: rgba(0, 255, 255, 0.05); color: #00ffff; padding: 1px 5px; border-radius: 3px; border: 1px solid rgba(0, 255, 255, 0.2); font-size: 0.65rem !important; }
     .hit-badge { background: rgba(188, 19, 254, 0.1); color: #bc13fe; padding: 1px 5px; border-radius: 3px; border: 1px solid #bc13fe; font-size: 0.65rem !important; }
 
-    /* בחירה מהירה בשורה אחת */
-    .history-row { display: flex; flex-direction: row; gap: 5px; overflow-x: auto; padding: 5px 0; }
+    /* כפתורי היסטוריה - זרימה חופשית בשורה אחת */
+    .history-box { display: flex; flex-wrap: wrap; gap: 5px; margin-bottom: 10px; }
     .stButton > button { padding: 2px 8px !important; font-size: 0.7rem !important; height: auto !important; }
     </style>
     """, unsafe_allow_html=True)
@@ -88,16 +92,19 @@ with c3:
     st.write("##")
     if st.button("➕", use_container_width=True): add_alert_callback()
 
-# 2. בחירה מהירה - שורה אחת ללא ירידה
+# 2. בחירה מהירה - שורה אחת שמתמלאת ורק אז יורדת
 history = list(st.session_state.alerts.keys())
 if history:
-    st.markdown('<div class="history-row">', unsafe_allow_html=True)
-    h_cols = st.columns(len(history))
-    for idx, h_ticker in enumerate(history):
-        if h_cols[idx].button(h_ticker, key=f"hbtn_{h_ticker}"):
-            st.session_state.ticker_input = h_ticker
-            st.rerun()
-    st.markdown('</div>', unsafe_allow_html=True)
+    st.write("🕒 בחירה מהירה:")
+    # יצירת מיכל לכפתורים
+    container = st.container()
+    with container:
+        # פריסת כפתורים בשורה רציפה
+        cols = st.columns(len(history) if len(history) < 10 else 10)
+        for i, h_ticker in enumerate(history):
+            col_idx = i % len(cols)
+            with cols[col_idx]:
+                st.button(h_ticker, key=f"h_{h_ticker}", on_click=set_ticker_callback, args=(h_ticker,))
 
 st.divider()
 edit_mode = st.sidebar.toggle("🛠️ עריכה")
@@ -139,5 +146,4 @@ if st.session_state.alerts:
             st.markdown(card_html, unsafe_allow_html=True)
             if needs_save: save_data(st.session_state.alerts)
         except: pass
-
 
