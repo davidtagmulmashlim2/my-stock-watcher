@@ -1,0 +1,14 @@
+name: Bot Keep Alive
+on:
+  schedule:
+    - cron: '*/15 * * * *' # יריץ את הבדיקה כל 15 דקות
+  workflow_dispatch: # מאפשר להפעיל ידנית לבדיקה
+
+jobs:
+  ping_app:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Ping Streamlit App
+        run: |
+          curl -s https://my-stock-watcher-tnb5vsm2fbdukcxa7vvjub.streamlit.app/ > /dev/null
+          echo "Punched the clock!"
