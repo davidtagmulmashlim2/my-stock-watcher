@@ -3,9 +3,10 @@ import yfinance as yf
 import json
 import os
 import requests
+from datetime import datetime
 from streamlit_autorefresh import st_autorefresh
 
-# --- הגדרות טלגרם (משתמש ב-OpenAI API Key כטוקן לפי בקשתך) ---
+# --- הגדרות טלגרם (משתמש ב-OpenAI API Key כטוקן) ---
 openai_api_key = st.secrets["OPENAI_API_KEY"]
 TELEGRAM_CHAT_ID = "779151879"
 
@@ -19,6 +20,9 @@ def send_telegram_msg(message):
 
 st.set_page_config(page_title="NEON 2026", layout="wide")
 st_autorefresh(interval=5000, key="datarefresh")
+
+# הדפסה ללוג של Streamlit - כדי שתוכל לראות שהבוט של GitHub "העיר" את האתר
+print(f"[{datetime.now().strftime('%H:%M:%S')}] --- System Check: Keeping Awake ---")
 
 DB_FILE = "alerts_db.json"
 
@@ -86,7 +90,7 @@ st.markdown("""
     </style>
     """, unsafe_allow_html=True)
 
-# 1. אזור הזנה
+# 1. אזור הזנה - למעלה
 c1, c2, c3 = st.columns([2, 2, 1])
 with c1: st.text_input("סימול:", key="ticker_input")
 with c2: st.number_input("יעד ($):", key="price_input", step=0.01, value=None, on_change=add_alert_callback)
