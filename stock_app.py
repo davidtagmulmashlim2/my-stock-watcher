@@ -5,14 +5,14 @@ import os
 import requests
 from streamlit_autorefresh import st_autorefresh
 
-# --- הגדרות טלגרם מעודכנות ---
-
+# --- הגדרות טלגרם (משתמש ב-OpenAI API Key כטוקן לפי בקשתך) ---
 openai_api_key = st.secrets["OPENAI_API_KEY"]
-TELEGRAM_CHAT_ID = "779151879" # שים לב: וודא שזה ה-ID שקיבלת מ-userinfobot
+TELEGRAM_CHAT_ID = "779151879"
+
 # פונקציית שליחה לטלגרם
 def send_telegram_msg(message):
     try:
-        url = f"https://api.telegram.org/bot{TELEGRAM_TOKEN}/sendMessage"
+        url = f"https://api.telegram.org/bot{openai_api_key}/sendMessage"
         payload = {"chat_id": TELEGRAM_CHAT_ID, "text": message}
         requests.post(url, data=payload)
     except: pass
@@ -59,40 +59,34 @@ def add_alert_callback():
             st.toast(f"נוסף {t_in}", icon="✅")
         except: st.toast("שגיאה", icon="⚠️")
 
-# עיצוב CSS - דגש על כפתורי היסטוריה צמודים ופונט קטן
+# עיצוב CSS 
 st.markdown("""
     <style>
     .stApp { background: #0b0d11; color: #e0e0e0; }
     h3 { font-size: 0.85rem !important; display: inline; margin-left: 8px; }
     .price-main { color: #00ffff; font-size: 0.95rem !important; font-weight: 800; display: inline; margin-right: 10px; }
-    
     .stock-card { 
         background: rgba(255, 255, 255, 0.03); 
         border-radius: 4px; padding: 4px 10px; 
         border-right: 3px solid #00ffff; margin-bottom: 3px;
         display: flex; align-items: center; white-space: nowrap;
     }
-
     .alerts-wrapper { display: inline-flex; flex-wrap: nowrap; gap: 4px; }
     .price-badge { background: rgba(0, 255, 255, 0.05); color: #00ffff; padding: 1px 5px; border-radius: 3px; border: 1px solid rgba(0, 255, 255, 0.2); font-size: 0.65rem !important; }
     .hit-badge { background: rgba(188, 19, 254, 0.1); color: #bc13fe; padding: 1px 5px; border-radius: 3px; border: 1px solid #bc13fe; font-size: 0.65rem !important; }
-
-    /* עיצוב כפתורי היסטוריה קטנים במיוחד צמודים */
     div[data-testid="column"] { width: fit-content !important; min-width: unset !important; }
     .stButton > button { 
         padding: 2px 6px !important; 
-        font-size: 0.55rem !important; /* קטן ב-25% נוספים */
+        font-size: 0.55rem !important; 
         height: auto !important; 
         min-height: 0px !important;
         margin: 0px !important;
     }
-    
-    /* מניעת ריווחים מיותרים בין כפתורי ההיסטוריה */
     div[data-testid="stHorizontalBlock"] { gap: 4px !important; }
     </style>
     """, unsafe_allow_html=True)
 
-# 1. אזור הזנה - למעלה
+# 1. אזור הזנה
 c1, c2, c3 = st.columns([2, 2, 1])
 with c1: st.text_input("סימול:", key="ticker_input")
 with c2: st.number_input("יעד ($):", key="price_input", step=0.01, value=None, on_change=add_alert_callback)
@@ -100,14 +94,12 @@ with c3:
     st.write("##")
     if st.button("➕", use_container_width=True): add_alert_callback()
 
-# 2. בחירה מהירה - מסודר בשורות רציפות
+# 2. בחירה מהירה
 history = list(st.session_state.alerts.keys())
 if history:
     st.write("🕒 בחירה מהירה:")
-    # יצירת קונטיינר שמכיל את הכפתורים בצורה צפופה
     h_area = st.container()
     with h_area:
-        # פריסה של עד 15 כפתורים בשורה לפני שמתחיל "בלגן"
         cols = st.columns(15) 
         for i, h_ticker in enumerate(history):
             col_idx = i % 15
@@ -116,7 +108,7 @@ if history:
 st.divider()
 edit_mode = st.sidebar.toggle("🛠️ עריכה")
 
-# 3. רשימת מניות
+# 3. רשימת מניות ובדיקת התראות
 if st.session_state.alerts:
     for t, alert_list in list(st.session_state.alerts.items()):
         alert_list.sort(key=lambda x: x['price'])
@@ -153,5 +145,3 @@ if st.session_state.alerts:
             st.markdown(card_html, unsafe_allow_html=True)
             if needs_save: save_data(st.session_state.alerts)
         except: pass
-
-
